@@ -14,6 +14,8 @@ from langchain.text_splitter import CharacterTextSplitter
 from langchain.chains.question_answering import load_qa_chain
 from langchain_community.vectorstores import FAISS
 import logging
+from auth import get_current_user
+from typing import Annotated
 
 logger = logging.getLogger(__name__)
 
@@ -92,8 +94,10 @@ async def ask_from_document(request: PDFQuestionRequest):
         logger.info("Sending 400: couldn't find the file to process")
         return {"status": 400, "message": "PDF file with name {name} couldn't be found in the server".format(name=request.pdf_name)}
 
+user_dependency = Annotated[dict, Depends(get_current_user)]
+
 @router.post("/ask")
-async def ask(user:None, request: PromptRequest):
+async def ask(user:user_dependency, request: PromptRequest):
 
     if request.prompt is None or request.prompt == '':
         logger.info("Sending 400: Prompt is empty")

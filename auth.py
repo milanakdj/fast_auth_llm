@@ -18,15 +18,15 @@ SECRET_KEY = '197b2c37c391b3d93fe80344fe73b806947a65e37297d05a1a23cffa12702fe3'
 ALGORITH = 'HS256'
 
 bcrypt_context = CryptContext(schemes= ['bcrypt'], deprecated = 'auto')
-oauth2_bearere = OAuth2PasswordBearer(tokenUrl = 'auth/token')
+oauth2_bearer = OAuth2PasswordBearer(tokenUrl = 'auth/token')
 
 class Token(BaseModel):
     access_token: str
     token_type: str
 
-def get_db():
-    user_db = database
-    yield user_db
+# def get_db():
+#     user_db = database
+#     yield user_db
 
 # db_dependency = Annotated[, Depends(get_db)]
     
@@ -46,6 +46,20 @@ def create_access_token(username: str, user_id:int, expires_delta: timedelta):
     expires = datetime.now() + expires_delta
     encode.update({'exp': expires}) 
     return jwt.encode(encode, SECRET_KEY, algorithm=ALGORITH)
+
+
+#decode the jwt
+async def get_current_user(token: Annotated[str, Depends(oauth2_bearer)]):
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=ALGORITH)
+        username: str = payload.get('sub')
+        user_id: int = payload.get('id')
+        if username is None or user_id is None:
+            raise HTTPException(status_code= status.HTTP_401_UNAUTHORIZED, detail= ' could not validate user')
+        return {'username': username, 'id': user_id}
+    except JWTError:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail='could not validate user')
+
 
 def authenticate_user(username: str, password: str):
     if username == database['username'] and password == database['password']:
