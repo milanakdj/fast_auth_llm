@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 import uvicorn
 import sam
+import auth
 
 app = FastAPI()
 
@@ -23,5 +24,6 @@ async def ask(prompt: str):
     return (prompt)
 
 app.include_router(sam.router)
+app.include_router(auth.router)
 if __name__ == '__main__':
     uvicorn.run(app, host = 'localhost', port = 8502)

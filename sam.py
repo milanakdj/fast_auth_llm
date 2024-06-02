@@ -93,7 +93,7 @@ async def ask_from_document(request: PDFQuestionRequest):
         return {"status": 400, "message": "PDF file with name {name} couldn't be found in the server".format(name=request.pdf_name)}
 
 @router.post("/ask")
-async def ask(request: PromptRequest):
+async def ask(user:None, request: PromptRequest):
 
     if request.prompt is None or request.prompt == '':
         logger.info("Sending 400: Prompt is empty")
