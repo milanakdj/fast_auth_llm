@@ -1,4 +1,4 @@
-from fastapi import FastAPI, APIRouter, Depends
+from fastapi import FastAPI, APIRouter, Depends, status, HTTPException
 # from config import import_config
 from pydantic import BaseModel
 # from auth import get_user
@@ -16,6 +16,10 @@ from langchain_community.vectorstores import FAISS
 import logging
 from auth import get_current_user
 from typing import Annotated
+import models
+from db import engine, SessionLocal
+from sqlalchemy.orm import Session
+from models import Users
 
 logger = logging.getLogger(__name__)
 
@@ -27,6 +31,20 @@ logging.basicConfig(filename="logs.log",
 # router = APIRouter(dependencies=[Depends(get_user)])
 router = APIRouter()
 
+
+
+#find and create the models
+models.Base.metadata.create_all(bind=engine)
+
+
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
+db_dependency = Annotated[Session, Depends(get_db)]
 
 class PDFQuestionRequestNew(BaseModel):
     pdf_base64: str
@@ -96,6 +114,8 @@ async def ask_from_document(request: PDFQuestionRequest):
 
 user_dependency = Annotated[dict, Depends(get_current_user)]
 
+
+
 @router.post("/ask")
 async def ask(user:user_dependency, request: PromptRequest):
 
@@ -144,6 +164,9 @@ def get_llm_response(location, query):
     }
     answer = qa_chain.invoke(inputs)
     return answer["output_text"]
+
+
+
 
 def get_llm_response_text(query):
     qa_chain = create_agent_chain()

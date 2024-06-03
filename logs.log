@@ -44,3 +44,29 @@ Traceback (most recent call last):
     raise ValueError(
 ValueError: Invalid input type <class 'dict'>. Must be a PromptValue, str, or list of BaseMessages.
 2024-06-03 08:50:54,200 INFO: Sending response
+2024-06-03 09:38:32,418 INFO: Sending response
+2024-06-03 10:00:56,156 WARNING: (trapped) error reading bcrypt version
+Traceback (most recent call last):
+  File "C:\Users\milan\OneDrive\Documents\1 fast_auth_llm\myenv\Lib\site-packages\passlib\handlers\bcrypt.py", line 620, in _load_backend_mixin
+    version = _bcrypt.__about__.__version__
+              ^^^^^^^^^^^^^^^^^
+AttributeError: module 'bcrypt' has no attribute '__about__'
+2024-06-03 10:04:01,881 WARNING: (trapped) error reading bcrypt version
+Traceback (most recent call last):
+  File "C:\Users\milan\OneDrive\Documents\1 fast_auth_llm\myenv\Lib\site-packages\passlib\handlers\bcrypt.py", line 620, in _load_backend_mixin
+    version = _bcrypt.__about__.__version__
+              ^^^^^^^^^^^^^^^^^
+AttributeError: module 'bcrypt' has no attribute '__about__'
+2024-06-03 10:09:32,872 WARNING: (trapped) error reading bcrypt version
+Traceback (most recent call last):
+  File "C:\Users\milan\OneDrive\Documents\1 fast_auth_llm\myenv\Lib\site-packages\passlib\handlers\bcrypt.py", line 620, in _load_backend_mixin
+    version = _bcrypt.__about__.__version__
+              ^^^^^^^^^^^^^^^^^
+AttributeError: module 'bcrypt' has no attribute '__about__'
+2024-06-03 10:10:46,596 WARNING: (trapped) error reading bcrypt version
+Traceback (most recent call last):
+  File "C:\Users\milan\OneDrive\Documents\1 fast_auth_llm\myenv\Lib\site-packages\passlib\handlers\bcrypt.py", line 620, in _load_backend_mixin
+    version = _bcrypt.__about__.__version__
+              ^^^^^^^^^^^^^^^^^
+AttributeError: module 'bcrypt' has no attribute '__about__'
+2024-06-03 10:14:15,819 INFO: Sending response
