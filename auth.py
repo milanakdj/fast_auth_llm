@@ -62,8 +62,8 @@ async def get_current_user(token: Annotated[str, Depends(oauth2_bearer)]):
 
 
 def authenticate_user(username: str, password: str):
-    if username == database['username'] and password == database['password']:
-        return username, database['id']
-    else:
-        return False
+    for d in database:
+        if username == d['username'] and password == d['password']:
+            return username, d['id']
+    return False
     

@@ -1,2 +1,46 @@
 2024-06-01 15:14:42,447 INFO: Sending response
 2024-06-02 17:34:45,493 INFO: Sending response
+2024-06-03 08:44:59,759 INFO: Sending response
+2024-06-03 08:47:13,679 ERROR: Invalid input type <class 'dict'>. Must be a PromptValue, str, or list of BaseMessages.
+Traceback (most recent call last):
+  File "C:\Users\milan\OneDrive\Documents\1 fast_auth_llm\sam.py", line 28, in ask
+    response = await get_llm_response_text(request.prompt)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\milan\OneDrive\Documents\1 fast_auth_llm\sam.py", line 37, in get_llm_response_text
+    answer = qa_chain.invoke(inputs)
+             ^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\milan\OneDrive\Documents\1 fast_auth_llm\myenv\Lib\site-packages\langchain_core\language_models\llms.py", line 277, in invoke
+    [self._convert_input(input)],
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\milan\OneDrive\Documents\1 fast_auth_llm\myenv\Lib\site-packages\langchain_core\language_models\llms.py", line 261, in _convert_input
+    raise ValueError(
+ValueError: Invalid input type <class 'dict'>. Must be a PromptValue, str, or list of BaseMessages.
+2024-06-03 08:47:40,163 ERROR: Invalid input type <class 'dict'>. Must be a PromptValue, str, or list of BaseMessages.
+Traceback (most recent call last):
+  File "C:\Users\milan\OneDrive\Documents\1 fast_auth_llm\sam.py", line 28, in ask
+    response = await get_llm_response_text(request.prompt)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\milan\OneDrive\Documents\1 fast_auth_llm\sam.py", line 37, in get_llm_response_text
+    answer = qa_chain.invoke(inputs)
+             ^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\milan\OneDrive\Documents\1 fast_auth_llm\myenv\Lib\site-packages\langchain_core\language_models\llms.py", line 277, in invoke
+    [self._convert_input(input)],
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\milan\OneDrive\Documents\1 fast_auth_llm\myenv\Lib\site-packages\langchain_core\language_models\llms.py", line 261, in _convert_input
+    raise ValueError(
+ValueError: Invalid input type <class 'dict'>. Must be a PromptValue, str, or list of BaseMessages.
+2024-06-03 08:47:45,216 ERROR: Invalid input type <class 'dict'>. Must be a PromptValue, str, or list of BaseMessages.
+Traceback (most recent call last):
+  File "C:\Users\milan\OneDrive\Documents\1 fast_auth_llm\sam.py", line 28, in ask
+    response = await get_llm_response_text(request.prompt)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\milan\OneDrive\Documents\1 fast_auth_llm\sam.py", line 37, in get_llm_response_text
+    answer = qa_chain.invoke(inputs)
+             ^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\milan\OneDrive\Documents\1 fast_auth_llm\myenv\Lib\site-packages\langchain_core\language_models\llms.py", line 277, in invoke
+    [self._convert_input(input)],
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\milan\OneDrive\Documents\1 fast_auth_llm\myenv\Lib\site-packages\langchain_core\language_models\llms.py", line 261, in _convert_input
+    raise ValueError(
+ValueError: Invalid input type <class 'dict'>. Must be a PromptValue, str, or list of BaseMessages.
+2024-06-03 08:50:54,200 INFO: Sending response

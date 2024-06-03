@@ -145,7 +145,6 @@ def get_llm_response(location, query):
     answer = qa_chain.invoke(inputs)
     return answer["output_text"]
 
-
 def get_llm_response_text(query):
     qa_chain = create_agent_chain()
     input = {
