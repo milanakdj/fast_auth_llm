@@ -44,3 +44,31 @@ Traceback (most recent call last):
     raise ValueError(
 ValueError: Invalid input type <class 'dict'>. Must be a PromptValue, str, or list of BaseMessages.
 2024-06-03 08:50:54,200 INFO: Sending response
+2024-06-04 14:56:46,424 WARNING: ratelimit 1 per 1 minute (::1) exceeded at endpoint: /health
+2024-06-04 15:04:26,305 WARNING: ratelimit 1 per 1 minute (::1) exceeded at endpoint: /health
+2024-06-04 15:18:48,461 WARNING: ratelimit 1 per 1 minute (::1) exceeded at endpoint: /auth/token
+2024-06-04 15:19:15,603 WARNING: ratelimit 1 per 1 minute (::1) exceeded at endpoint: /auth/token
+2024-06-04 15:36:59,008 WARNING: ratelimit 1 per 1 minute (::1) exceeded at endpoint: /ask
+2024-06-04 15:47:20,698 INFO: Sending response
+2024-06-04 15:48:27,164 INFO: Sending response
+2024-06-04 15:49:08,388 INFO: Sending response
+2024-06-04 15:49:47,028 INFO: Sending response
+2024-06-04 15:49:49,886 WARNING: ratelimit 1 per 1 minute (::1) exceeded at endpoint: /auth/token
+2024-06-04 15:50:11,770 WARNING: ratelimit 1 per 1 minute (::1) exceeded at endpoint: /auth/token
+2024-06-04 15:50:46,789 INFO: Sending response
+2024-06-04 15:51:11,387 INFO: Sending response
+2024-06-04 15:51:37,551 INFO: Sending response
+2024-06-04 15:53:02,248 INFO: Sending response
+2024-06-04 15:53:12,355 WARNING: ratelimit 1 per 1 minute (::1) exceeded at endpoint: /ask
+2024-06-04 15:54:14,287 INFO: Sending response
+2024-06-04 15:54:58,881 INFO: Sending response
+2024-06-04 15:55:22,126 INFO: Sending response
+2024-06-04 15:55:56,613 INFO: Sending response
+2024-06-04 15:56:40,701 INFO: Sending response
+2024-06-04 15:57:32,867 INFO: Sending response
+2024-06-04 15:58:17,019 INFO: Sending response
+2024-06-04 15:58:41,843 INFO: Sending response
+2024-06-04 15:59:18,938 INFO: Sending response
+2024-06-04 16:00:01,184 INFO: Sending response
+2024-06-04 16:00:30,678 INFO: Sending response
+2024-06-04 16:00:34,759 WARNING: ratelimit 2 per 2 minute (::1) exceeded at endpoint: /ask

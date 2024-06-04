@@ -1,9 +1,13 @@
-from fastapi import FastAPI, Response
+from fastapi import FastAPI, Response, Request
 import sam
 import auth
 import uvicorn
+from limiter import limiter, RateLimitExceeded, _rate_limit_exceeded_handler
 
 app = FastAPI()
+
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 app.include_router(sam.router)
 app.include_router(auth.router)
@@ -81,8 +85,9 @@ Endpoint: /ask
     return Response(content=content, media_type="text/html")
 
 @app.get("/health")
-async def health():
+@limiter.limit("1/minute")
+async def health(request: Request):
     return {"message": "OK"}
 
 if __name__ == "__main__":
-    uvicorn.run(app, host="localhost", port=8502)
+    uvicorn.run(app, host="localhost", port=8506)
