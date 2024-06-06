@@ -9,7 +9,7 @@ form_data = {
     "prompt": (None, "Who are you?")
 }
 
-# Send the request with form data
+# Send the request with form data to the samchat
 response = requests.post(
     "https://spiralogics.ai/samchat/ask",
     files=form_data,  # Use files to send multipart/form-data
