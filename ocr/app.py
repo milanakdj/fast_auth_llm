@@ -41,6 +41,7 @@ def upload():
            
      
         file.save(file_path)
+        print("\n\n\n\n", file_path)
         
         # Placeholder text for simulation
         extracted_text = engine.process(file_path)

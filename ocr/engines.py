@@ -63,3 +63,8 @@ class DocTrJsonEngine(Engine):
         result = predictor(doc)
        
         return result.export()
+    
+
+if __name__ == "__main__":
+    
+    print(DocTrJsonEngine().process("C:\\Users\\milan\\Downloads\\story elements.pdf"))

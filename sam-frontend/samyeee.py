@@ -7,6 +7,7 @@ from streamlit_extras.stylable_container import stylable_container
 from langchain.text_splitter import CharacterTextSplitter
 from langchain_community.document_loaders import PyPDFLoader
 from langchain.text_splitter import CharacterTextSplitter
+from langchain_core.documents import Document
 from langchain.chains.question_answering import load_qa_chain
 from langchain_community.vectorstores import FAISS
 from PIL import Image
@@ -15,6 +16,10 @@ from langchain_community.llms.ollama import Ollama
 from langchain_community.embeddings.ollama import OllamaEmbeddings
 import asyncio
 import json
+
+os.environ['KMP_DUPLICATE_LIB_OK'] = 'TRUE'
+
+# os.environ['USE_TORCH'] = '1'
 
 im = Image.open("images\\ai-icon-small.png")
 st.set_page_config(page_title="SAM-llama3",page_icon=im, layout="wide")
@@ -80,30 +85,10 @@ justify-content: flex-end;
 }
 
 .stSelectbox > div{ 
-    width:200px;}
+    width:200px;
+    float:left;
+    }
 
-div:has( >.element-container div.floating){
-  display:flex;
-  flex-direction:row-reverse;
-}
-div:has( >.element-container div.floating)>div:nth-child(1){
-  height:0px;
-  width:0px;
-  display:none;
-}div:has( >.element-container div.floating)>div:nth-child(2){
-  height:0px;
-  width:0px;
-  display:none;
-}div:has( >.element-container div.floating)>div:nth-child(4){
-  height:0px;
-  width:0px;
-  display:none;
-}
-div.floating{
- 
-  height:0%;
-}
-</style>
 """
 st.markdown(hide_streamlit_style, unsafe_allow_html=True)
 
@@ -173,24 +158,42 @@ def render_svg(svg):
 def click_button():
     st.session_state.clicked = True
 
+
 def load_chunk_persist_pdf(doc_path) -> FAISS:
     documents = []
     if st.session_state.pdf == "PyPDFLoader":
       loader = PyPDFLoader(doc_path)
       documents.extend(loader.load())
-
-      text_splitter = CharacterTextSplitter(chunk_size=1000, chunk_overlap=10)
-      chunked_documents = text_splitter.split_documents(documents)
-
-      vectordb = FAISS.from_documents(
-          documents=chunked_documents,
-          embedding=OllamaEmbeddings(model="nomic-embed-text")
-      )
-
-      return vectordb
+      
     else:
-      print("\n\n\n", 'whats upppppppp')
-	
+      from doctrr import DocTrJsonEngine
+      loader = DocTrJsonEngine()
+      data = loader.process(doc_path)
+      pages = {}
+      for k in range(len(data['pages'])):
+          page = ""
+          for i in range(len(data['pages'][k]["blocks"])):
+              for j in data['pages'][k]["blocks"][i]['lines'][0]['words']:
+                  page = page +" "+ j['value']
+          
+          pages.update({k:page})
+
+      for page in pages:
+         p_content = pages[page]
+         m_data = {
+            'source':doc_path,
+            'page':page
+         }
+         d = Document(page_content= p_content, metadata =m_data)
+         documents.append(d)
+    text_splitter = CharacterTextSplitter(chunk_size=1000, chunk_overlap=10)
+    chunked_documents = text_splitter.split_documents(documents)
+
+    vectordb = FAISS.from_documents(
+        documents=chunked_documents,
+        embedding=OllamaEmbeddings(model="nomic-embed-text")
+    )
+    return vectordb
 
 
 def get_llm_response(location, query, modeloption):
@@ -234,7 +237,7 @@ def main():
   doc = None
 
   fu = st.empty()
-
+  pdu = st.empty()
   pu = st.empty()
 
 
@@ -250,9 +253,18 @@ def main():
       st.session_state.location = get_upload_file_dialog(fu)
     #st.query_params.clear()
   else:
-    with st.container():
-        st.markdown('<div class= "dropdown-container-pdf"></div>', unsafe_allow_html = True)
-        new_type = pu.selectbox("Choose LLM Model", ['PyPDFLoader','other'], index =0, on_change=handle_pdf_select, key = 'kind_of_pdf')
+    with stylable_container(
+       key="pdfloader",
+       css_styles = """
+              {border: 1px solid;
+              width:200px;
+              display:flex;
+              justify-content: flex-end;}
+        """
+    ):
+      new_type = pu.selectbox("Choose LLM Model", ['PyPDFLoader','other'], index =0, on_change=handle_pdf_select, key = 'kind_of_pdf')  
+      st.markdown('hells')       
+        
     st.session_state.location = get_upload_file_dialog(fu)
 
   if st.session_state.location is not None and os.path.isfile(st.session_state.location):
@@ -270,16 +282,9 @@ def main():
     # index = VectorstoreIndexCreator(embedding=embeddings).from_loaders([loaders])
     fu.empty()
     pu.empty()
-    with stylable_container(
-       key = 'models',
-       css_styles = """
-        div[data-testid= "element-container"]{
-            width:200px;
-        }
-      """
-    ):
+    with st.container():
         st.markdown('<div class= "floating">', unsafe_allow_html = True)
-        modeloption = st.selectbox("Choose LLM Model", ['chatGPT','llama3'], index =0)
+        modeloption = pdu.selectbox("Choose LLM Model", ['chatGPT','llama3'], index =0)
         st.markdown('</div>', unsafe_allow_html=True)  
         
     placeholder = None
