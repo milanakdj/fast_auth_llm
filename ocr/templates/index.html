@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image/PDF Upload</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
+    <style>
+        #uploadedImage {
+            max-width: 80%;
+            max-height: 50vh;
+            margin: 20px auto;
+            display: block;
+        }
+    </style>
+</head>
+
+<body class="bg-gray-100 min-h-screen flex flex-col">
+    <div class="bg-white shadow-md rounded-lg p-8 mb-4">
+        <h1 class="text-2xl mb-4">Upload Image or PDF</h1>
+        <form id="uploadForm" class="mb-4" enctype="multipart/form-data">
+            <input type="file" id="fileInput" name="file" accept="image/*, .pdf" required
+                class="block w-full border border-gray-300 py-2 px-3 mb-3 leading-tight focus:outline-none focus:ring">
+            <div class="relative inline-block mb-4">
+                <select id="engineSelect" name="engine"
+                    class="block appearance-none w-full bg-white border border-gray-300 hover:border-gray-400 px-4 py-2 pr-8 rounded shadow leading-tight focus:outline-none focus:ring">
+                    {% for engine in engines %}
+                    <option value="{{ engine }}">{{ engine }}</option>
+                    {% endfor %}
+                </select>
+                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+                    <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                        <path d="M10 12a2 2 0 100-4 2 2 0 000 4zM3 10a7 7 0 1114 0 7 7 0 01-14 0z" />
+                    </svg>
+                </div>
+            </div>
+            <button type="submit"
+                class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:ring">Extract</button>
+        </form>
+    </div>
+
+    <div id="processingIndicator"
+        style="z-index: 10000;"
+        class="hidden absolute inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50">
+        <div class="spinner text-white"></div>
+        <p id="extractingText" class="text-white text-2xl">Extracting text...</p>
+    </div>
+
+    <div id="extractedText" class="hidden bg-white shadow-md rounded-lg p-8 mb-4 relative">
+        <button id="closeText"
+            class="absolute top-0 right-0 mt-2 mr-10 text-red-500 hover:text-red-700 focus:outline-none">
+            <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+        </button>
+        <button id="copyText"
+            class="absolute top-0 right-0 mt-2 mr-2 text-green-500 hover:text-green-700 focus:outline-none">
+            <i class="fas fa-copy"></i>
+        </button>
+        <div id="textContent" class="overflow-auto max-h-96"></div>
+    </div>
+
+    <script>
+        document.getElementById('fileInput').addEventListener('change', function (event) {
+            var fileInput = event.target;
+            var file = fileInput.files[0];
+            var uploadedImage = document.getElementById('uploadedImage');
+            if (file && file.type.startsWith('image/')) {
+                var reader = new FileReader();
+                reader.onload = function (e) {
+                    if (uploadedImage) {
+                        uploadedImage.src = e.target.result;
+                    } else {
+                        uploadedImage = document.createElement('img');
+                        uploadedImage.src = e.target.result;
+                        uploadedImage.id = 'uploadedImage';
+                        document.body.insertBefore(uploadedImage, document.getElementById('processingIndicator'));
+                    }
+                };
+                reader.readAsDataURL(file);
+            } else {
+                if (uploadedImage) {
+                    uploadedImage.parentNode.removeChild(uploadedImage);
+                }
+            }
+        });
+
+        document.getElementById('uploadForm').addEventListener('submit', function (event) {
+            event.preventDefault();
+            var fileInput = document.getElementById('fileInput');
+            var file = fileInput.files[0];
+            var selectedEngine = document.getElementById('engineSelect').value;
+            if (file) {
+                console.log("Selected File:", file); // Log selected file
+                console.log("Selected Engine:", selectedEngine); // Log selected engine
+
+                // Show processing indicator and "Extracting text..." message
+                document.getElementById('processingIndicator').classList.remove('hidden');
+                document.getElementById('extractingText').classList.remove('hidden');
+
+                // Create FormData object
+                var formData = new FormData();
+                formData.append('file', file);
+                formData.append('engine', selectedEngine);
+
+                // Send fetch request
+                fetch('/upload', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => {
+                    if (response.ok) {
+                        return response.text();
+                    }
+                    throw new Error('Network response was not ok.');
+                })
+                .then(data => {
+                    // Hide processing indicator and "Extracting text..." message
+                    document.getElementById('processingIndicator').classList.add('hidden');
+                    document.getElementById('extractingText').classList.add('hidden');
+
+                    // Display extracted text
+                    document.getElementById('textContent').textContent = data;
+
+                    // Show extracted text card
+                    document.getElementById('extractedText').classList.remove('hidden');
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Error occurred. Please try again.');
+                });
+            } else {
+                alert('Please select a file.');
+            }
+        });
+
+        document.getElementById('closeText').addEventListener('click', function () {
+            document.getElementById('extractedText').classList.add('hidden');
+        });
+
+        document.getElementById('copyText').addEventListener('click', function () {
+            var textContent = document.getElementById('textContent').textContent;
+            navigator.clipboard.writeText(textContent).then(function () {
+                alert('Text copied to clipboard!');
+            }, function (err) {
+                console.error('Could not copy text: ', err);
+            });
+        });
+    </script>
+</body>
+
+</html>
