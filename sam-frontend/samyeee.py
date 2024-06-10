@@ -9,6 +9,8 @@ from langchain_community.document_loaders import PyPDFLoader
 from langchain.text_splitter import CharacterTextSplitter
 from langchain_core.documents import Document
 from langchain.chains.question_answering import load_qa_chain
+from langchain.callbacks.manager import CallbackManager
+from langchain.callbacks.streaming_stdout import StreamingStdOutCallbackHandler
 from langchain_community.vectorstores import FAISS
 from PIL import Image
 #from langchain_community.llms import ollama
@@ -205,9 +207,11 @@ def get_llm_response(location, query, modeloption):
     elif modeloption == 'chatGPT':
         # llm = ChatOpenAI(model_name=config["model"])
         pass
-
-    qa_chain = load_qa_chain(llm, chain_type="stuff")
-
+    callback_manager1 = CallbackManager([StreamingStdOutCallbackHandler()])
+    # qa_chain = load_qa_chain(llm, chain_type="stuff", callback_manager=callback_manager1, verbose= True)
+    from langchain_core.output_parsers import StrOutputParser
+    qa_chain = load_qa_chain(llm, chain_type="stuff", verbose= True)
+    # qa_chain = load_qa_chain(llm, chain_type="stuff")
     matching_docs = vectordb.similarity_search(query)
     
     inputs = {
@@ -284,7 +288,7 @@ def main():
     pu.empty()
     with st.container():
         st.markdown('<div class= "floating">', unsafe_allow_html = True)
-        modeloption = pdu.selectbox("Choose LLM Model", ['chatGPT','llama3'], index =0)
+        modeloption = pdu.selectbox("Choose LLM Model", ['chatGPT','llama3'], index =1)
         st.markdown('</div>', unsafe_allow_html=True)  
         
     placeholder = None
@@ -320,23 +324,49 @@ def main():
       placeholder.write("SAM is waiting..")
 
     if st.session_state.clicked and prompt:
-        inputs, qa_chain = get_llm_response(st.session_state.location,prompt,modeloption)
-       
-    # input2 = query + " based on "+ matching_docs[0]['page_content']
+        inputs, qa_chain = get_llm_response(st.session_state.location, prompt, modeloption)
         async def print_chain():
-            result = "\n\n".join(doc.page_content for doc in inputs['input_documents'])
-            llm = Ollama(model='llama3')
-            input2 = inputs['question'] + " based on " + result
-            full_response = ""
-            async for line in llm._astream(input2):
-              full_response += line.text
+          full_response = ""
+          async for event in qa_chain.astream_events(inputs, version = 'v1'):
+            kind = event["event"]
+            if kind == "on_llm_stream":
+              full_response += event['data']['chunk']
               placeholder.markdown(full_response,unsafe_allow_html=True)
-            
-            # async for word in qa_chain.astream(inputs):
-            #    print(word)
 
         # Running the asyncio event loop
         asyncio.run(print_chain())
+
+       
+        # input2 = query + " based on "+ matching_docs[0]['page_content']
+        # async def print_chain():
+        #     result = "\n\n".join(doc.page_content for doc in inputs['input_documents'])
+        #     llm = Ollama(model='llama3')
+        #     input2 = inputs['question'] + " based on " + result
+        #     full_response = ""
+        #     async for line in llm._astream(input2):
+        #       full_response += line.text
+        #       placeholder.markdown(full_response,unsafe_allow_html=True)
+        # # Running the asyncio event loop
+        # asyncio.run(print_chain())
+        
+        # async def print_chain():
+        #     full_response = ""
+        #     async for word in qa_chain.astream(inputs):
+        #       print(word)
+        #       full_response += word['output_text']
+        #       placeholder.markdown(full_response,unsafe_allow_html=True)
+
+        # # Running the asyncio event loop
+        # asyncio.run(print_chain())
+
+        # def print_chain():
+        #     full_response = ""
+        #     for word in qa_chain.stream(inputs):
+        #       print(word['output_text'], end = "", flush = True)
+        #       full_response += word['output_text']
+        #       placeholder.markdown(full_response,unsafe_allow_html=True)
+
+        # print_chain()
 
       #  placeholder.write("<b>" + prompt + "</b>", unsafe_allow_html=True)
        
