@@ -16,8 +16,34 @@ from PIL import Image
 #from langchain_community.llms import ollama
 from langchain_community.llms.ollama import Ollama
 from langchain_community.embeddings.ollama import OllamaEmbeddings
+from langchain_community.document_loaders import JSONLoader
+from streamlit_js_eval import streamlit_js_eval
+
 import asyncio
 import json
+from abc import ABC
+from doctr.io import DocumentFile
+from doctr.models import ocr_predictor
+import torch
+from pathlib import Path
+
+class Engine(ABC):
+    def process(self,filename:str)->str:
+        ...
+
+
+class DocTrJsonEngine(Engine):
+    def process(self, filename: str) -> str:
+        if filename.endswith(".pdf"):
+            doc= DocumentFile.from_pdf(filename)
+        else:
+            doc = DocumentFile.from_images([filename])
+        predictor = ocr_predictor(pretrained=True)
+        if torch.cuda.is_available():
+            predictor = predictor.to('cuda')
+        result = predictor(doc)
+    
+        return result.export()
 
 os.environ['KMP_DUPLICATE_LIB_OK'] = 'TRUE'
 
@@ -64,7 +90,7 @@ footer {visibility: hidden !important;}
   padding-right: 0rem;
 }
 #text_area_1 {
-  background: transparent;
+  background: black;
   border: 1px solid #233138;
   width: 100%;
   min-height: 528px;
@@ -160,15 +186,31 @@ def render_svg(svg):
 def click_button():
     st.session_state.clicked = True
 
+if 'json_val' not in st.session_state:
+   st.session_state.json_val = ""
+
+def edit_json():
+  file_path =Path(st.session_state.filename)
+  print(st.session_state.text_value,"is the updateeeeeeeeeeeeeeeeeee")
+  if st.session_state.json_val != st.session_state.text_value:
+    st.session_state.json_val = st.session_state.text_value
+    file_path.write_text(st.session_state.json_val)
+    
+    streamlit_js_eval(js_expressions="parent.window.location.reload()")
+
+
+def all_pages_empty(documents):
+  for doc in documents:
+      if doc.page_content.strip():  
+          return False
+  return True
+
 
 def load_chunk_persist_pdf(doc_path) -> FAISS:
     documents = []
-    if st.session_state.pdf == "PyPDFLoader":
-      loader = PyPDFLoader(doc_path)
-      documents.extend(loader.load())
-      
-    else:
-      from doctrr import DocTrJsonEngine
+    loader = PyPDFLoader(doc_path)
+    documents.extend(loader.load())
+    if all_pages_empty(documents):
       loader = DocTrJsonEngine()
       data = loader.process(doc_path)
       pages = {}
@@ -181,13 +223,13 @@ def load_chunk_persist_pdf(doc_path) -> FAISS:
           pages.update({k:page})
 
       for page in pages:
-         p_content = pages[page]
-         m_data = {
+          p_content = pages[page]
+          m_data = {
             'source':doc_path,
             'page':page
-         }
-         d = Document(page_content= p_content, metadata =m_data)
-         documents.append(d)
+          }
+          d = Document(page_content= p_content, metadata =m_data)
+          documents.append(d)
     text_splitter = CharacterTextSplitter(chunk_size=1000, chunk_overlap=10)
     chunked_documents = text_splitter.split_documents(documents)
 
@@ -220,7 +262,11 @@ def get_llm_response(location, query, modeloption):
     }
     return inputs, qa_chain
 
-
+def file_selector(folder_path='.'):
+  filenames = os.listdir(folder_path)
+  selected_filename = st.selectbox('Select a file to edit', filenames, index= None)
+  if selected_filename:
+    return os.path.join(folder_path, selected_filename)
 
 def main():
 
@@ -230,8 +276,6 @@ def main():
   if 'doc' not in st.session_state:
     st.session_state.location =''
 
-  if 'pdf' not in st.session_state:
-    st.session_state.pdf = "PyPDFLoader"
   
   type = 0
     
@@ -242,7 +286,6 @@ def main():
 
   fu = st.empty()
   pdu = st.empty()
-  pu = st.empty()
 
 
 
@@ -257,20 +300,34 @@ def main():
       st.session_state.location = get_upload_file_dialog(fu)
     #st.query_params.clear()
   else:
-    with stylable_container(
-       key="pdfloader",
-       css_styles = """
-              {border: 1px solid;
-              width:200px;
-              display:flex;
-              justify-content: flex-end;}
-        """
-    ):
-      new_type = pu.selectbox("Choose LLM Model", ['PyPDFLoader','other'], index =0, on_change=handle_pdf_select, key = 'kind_of_pdf')  
-      st.markdown('hells')       
-        
-    st.session_state.location = get_upload_file_dialog(fu)
 
+    st.session_state.filename = file_selector()
+    st.session_state.location = get_upload_file_dialog(fu)
+  
+  if st.session_state.filename is not None: 
+    st.write('You selected `%s`' % st.session_state.filename)
+    fu.empty()
+    from pathlib import Path
+    from code_editor import code_editor
+    c = json.loads(Path(st.session_state.filename).read_text())
+
+    json_val = st.text_area(label='json',key='text_value', value=json.dumps(c, indent=4))
+    print("\n\n\n",json_val,"\n\n\n")
+
+    b = Image.open("images\\ai-ask.png")
+    fname = str(st.session_state.filename)
+    st.markdown("""
+        <script>
+        function reloadPage() {
+            window.location.reload(true);
+        }
+        </script>
+    """, unsafe_allow_html=True)
+    st.button("click meee", on_click=edit_json, key="ask_button2")
+      # st.markdown('<script>reloadPage();</script>', unsafe_allow_html=True)
+
+
+    
   if st.session_state.location is not None and os.path.isfile(st.session_state.location):
     # loaders = None
     # loaders = PyPDFLoader(st.session_state.location)
@@ -285,7 +342,6 @@ def main():
     # embeddings = OpenAIEmbeddings()
     # index = VectorstoreIndexCreator(embedding=embeddings).from_loaders([loaders])
     fu.empty()
-    pu.empty()
     with st.container():
         st.markdown('<div class= "floating">', unsafe_allow_html = True)
         modeloption = pdu.selectbox("Choose LLM Model", ['chatGPT','llama3'], index =1)
