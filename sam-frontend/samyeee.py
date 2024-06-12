@@ -307,24 +307,41 @@ def main():
   if st.session_state.filename is not None: 
     st.write('You selected `%s`' % st.session_state.filename)
     fu.empty()
-    from pathlib import Path
-    from code_editor import code_editor
-    c = json.loads(Path(st.session_state.filename).read_text())
+    c1,c2 = st.columns([0.7, 0.3], gap="small")
+    with c1:
+      c = json.loads(Path(st.session_state.filename).read_text())
 
-    json_val = st.text_area(label='json',key='text_value', value=json.dumps(c, indent=4))
-    print("\n\n\n",json_val,"\n\n\n")
+      json_val = st.text_area(label='json',key='text_value', value=json.dumps(c, indent=4))
+      print("\n\n\n",json_val,"\n\n\n")
 
-    b = Image.open("images\\ai-ask.png")
-    fname = str(st.session_state.filename)
-    st.markdown("""
-        <script>
-        function reloadPage() {
-            window.location.reload(true);
-        }
-        </script>
-    """, unsafe_allow_html=True)
-    st.button("click meee", on_click=edit_json, key="ask_button2")
-      # st.markdown('<script>reloadPage();</script>', unsafe_allow_html=True)
+      b = Image.open("images\\ai-ask.png")
+      fname = str(st.session_state.filename)
+      st.markdown("""
+          <script>
+          function reloadPage() {
+              window.location.reload(true);
+          }
+          </script>
+      """, unsafe_allow_html=True)
+    with c2:
+      st.markdown(
+      """
+        <style>
+
+        .stButton>button {
+          background-color: #4F8BF9;
+          color: black;
+          border-radius: 50%;
+          height: 5em;
+          width: 5em;
+      }
+
+      .stTextInput>div>div>input {
+          color: #4F8BF9;
+      }
+        </style>
+        """, unsafe_allow_html=True)
+      st.button("Submit", on_click=edit_json, key="ask_button2")
 
 
     
