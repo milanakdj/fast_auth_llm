@@ -17,7 +17,6 @@ from PIL import Image
 from langchain_community.llms.ollama import Ollama
 from langchain_community.embeddings.ollama import OllamaEmbeddings
 from langchain_community.document_loaders import JSONLoader
-from streamlit_js_eval import streamlit_js_eval
 
 import asyncio
 import json
@@ -26,6 +25,8 @@ from doctr.io import DocumentFile
 from doctr.models import ocr_predictor
 import torch
 from pathlib import Path
+from langchain_core.output_parsers import StrOutputParser
+from langchain_core.prompts import ChatPromptTemplate, SystemMessagePromptTemplate, PromptTemplate, HumanMessagePromptTemplate
 
 class Engine(ABC):
     def process(self,filename:str)->str:
@@ -186,18 +187,6 @@ def render_svg(svg):
 def click_button():
     st.session_state.clicked = True
 
-if 'json_val' not in st.session_state:
-   st.session_state.json_val = ""
-
-def edit_json():
-  file_path =Path(st.session_state.filename)
-  print(st.session_state.text_value,"is the updateeeeeeeeeeeeeeeeeee")
-  if st.session_state.json_val != st.session_state.text_value:
-    st.session_state.json_val = st.session_state.text_value
-    file_path.write_text(st.session_state.json_val)
-    
-    streamlit_js_eval(js_expressions="parent.window.location.reload()")
-
 
 def all_pages_empty(documents):
   for doc in documents:
@@ -240,6 +229,30 @@ def load_chunk_persist_pdf(doc_path) -> FAISS:
     return vectordb
 
 
+with open("config.json") as user_file:
+  file_contents = user_file.read()
+  config = json.loads(file_contents)
+
+
+if 'filename' not in st.session_state:
+    st.session_state.filename = config['context_path']
+
+
+def create_agent_chain(llm):
+  file = json.loads(Path(st.session_state.filename).read_text())
+  context = ""
+  for f in file:
+      if file[f]['is_default'] == True:
+        context = file[f]['Context']
+  sys_msg_pt = SystemMessagePromptTemplate.from_template(context)
+  user_pt = PromptTemplate(template="{context}\n{question}",
+                                input_variables=['context', 'question'])
+  user_msg_pt = HumanMessagePromptTemplate(prompt=user_pt)
+  prompt = ChatPromptTemplate.from_messages([sys_msg_pt, user_msg_pt])
+  qa_chain = load_qa_chain(llm, chain_type="stuff", verbose= True, prompt = prompt)
+  return qa_chain
+    
+
 def get_llm_response(location, query, modeloption):
     vectordb = load_chunk_persist_pdf(location)
     llm = None
@@ -249,11 +262,11 @@ def get_llm_response(location, query, modeloption):
     elif modeloption == 'chatGPT':
         # llm = ChatOpenAI(model_name=config["model"])
         pass
-    callback_manager1 = CallbackManager([StreamingStdOutCallbackHandler()])
+    # callback_manager1 = CallbackManager([StreamingStdOutCallbackHandler()])
     # qa_chain = load_qa_chain(llm, chain_type="stuff", callback_manager=callback_manager1, verbose= True)
-    from langchain_core.output_parsers import StrOutputParser
-    qa_chain = load_qa_chain(llm, chain_type="stuff", verbose= True)
     # qa_chain = load_qa_chain(llm, chain_type="stuff")
+
+    qa_chain = create_agent_chain(llm)
     matching_docs = vectordb.similarity_search(query)
     
     inputs = {
@@ -271,7 +284,6 @@ def main():
   if 'doc' not in st.session_state:
     st.session_state.location =''
 
-  
   type = 0
     
   if 'type' in st.query_params:
@@ -281,7 +293,6 @@ def main():
 
   fu = st.empty()
   pdu = st.empty()
-
 
 
   if 'doc' in st.query_params:
@@ -296,47 +307,6 @@ def main():
     #st.query_params.clear()
   else:
     st.session_state.location = get_upload_file_dialog(fu)
-  
-  if st.session_state.filename is not None: 
-    st.write('You selected `%s`' % st.session_state.filename)
-    fu.empty()
-    c1,c2 = st.columns([0.7, 0.3], gap="small")
-    with c1:
-      c = json.loads(Path(st.session_state.filename).read_text())
-
-      json_val = st.text_area(label='json',key='text_value', value=json.dumps(c, indent=4))
-      print("\n\n\n",json_val,"\n\n\n")
-
-      b = Image.open("images\\ai-ask.png")
-      fname = str(st.session_state.filename)
-      st.markdown("""
-          <script>
-          function reloadPage() {
-              window.location.reload(true);
-          }
-          </script>
-      """, unsafe_allow_html=True)
-    with c2:
-      st.markdown(
-      """
-        <style>
-
-        .stButton>button {
-          background-color: #4F8BF9;
-          color: black;
-          border-radius: 50%;
-          height: 5em;
-          width: 5em;
-      }
-
-      .stTextInput>div>div>input {
-          color: #4F8BF9;
-      }
-        </style>
-        """, unsafe_allow_html=True)
-      st.button("Submit", on_click=edit_json, key="ask_button2")
-
-
     
   if st.session_state.location is not None and os.path.isfile(st.session_state.location):
     # loaders = None
