@@ -28,6 +28,7 @@ from pathlib import Path
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import ChatPromptTemplate, SystemMessagePromptTemplate, PromptTemplate, HumanMessagePromptTemplate
 
+
 class Engine(ABC):
     def process(self,filename:str)->str:
         ...
@@ -51,7 +52,7 @@ os.environ['KMP_DUPLICATE_LIB_OK'] = 'TRUE'
 # os.environ['USE_TORCH'] = '1'
 
 im = Image.open("images\\ai-icon-small.png")
-st.set_page_config(page_title="SAM-llama3",page_icon=im, layout="wide")
+st.set_page_config(page_title="SAM-llama3",page_icon=im, layout="wide",initial_sidebar_state="collapsed")
 
 def get_base64_of_bin_file(bin_file):
   with open(bin_file, 'rb') as f:

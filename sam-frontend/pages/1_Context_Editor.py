@@ -5,7 +5,7 @@ import json
 import pandas as pd
 from pathlib import Path
 from streamlit_extras.switch_page_button import switch_page
-
+from streamlit_extras.stylable_container import stylable_container
 
 with open("config.json") as user_file:
     file_contents = user_file.read()
@@ -35,13 +35,13 @@ def edit_df():
 
 def main():
 
-    if 'clicked' not in st.session_state:
-        st.session_state.clicked = False
+    if 'clicked_context' not in st.session_state:
+        st.session_state.clicked_context = False
 
     fu = st.empty()
 
     with st.container():
-        fu.button("Click to edit config file", on_click=click_button, key="ask_button")
+        fu.button(":blue-background[Click to edit config file]", on_click=click_button, key="ask_button")
 
     c1,c2 = st.columns([0.7, 0.3], gap="small")
     
@@ -50,14 +50,14 @@ def main():
     }
 
     with c1:
-        if st.session_state.clicked:
+        if st.session_state.clicked_context:
             fu.empty()
             
             ss.edf = st.data_editor(ss.df, column_config=column_config, use_container_width=True, num_rows='dynamic', key='edited_df')
 
     with c2:
         checked_row = 0
-        if st.session_state.clicked:
+        if st.session_state.clicked_context:
             for i, column in enumerate(st.session_state.file):
                 if st.session_state.file[column]['is_default']:
                     checked_row = i
@@ -80,14 +80,22 @@ def main():
             genre = st.radio("Is Default", vals, index=checked_row)
             st.session_state.default = int(genre) - 1
 
-    if st.session_state.clicked:
-        if st.button("click here to submit"):
-            ss.df = ss.edf.copy()
-            st.session_state.file = json.loads(ss.df.transpose().to_json())
-            for i, row in enumerate(st.session_state.file):
-                st.session_state.file[row]['is_default'] = (i == st.session_state.default)
-            file_path = Path(st.session_state.filename)
-            file_path.write_text(json.dumps(st.session_state.file, indent=4))
-            switch_page("samyeee")
+    if st.session_state.clicked_context:
+        with stylable_container(
+            "green",
+            css_styles="""
+            button {
+                background-color: #00FF00;
+                color: black;
+            }""",
+        ):
+            if st.button("Save"):
+                ss.df = ss.edf.copy()
+                st.session_state.file = json.loads(ss.df.transpose().to_json())
+                for i, row in enumerate(st.session_state.file):
+                    st.session_state.file[row]['is_default'] = (i == st.session_state.default)
+                file_path = Path(st.session_state.filename)
+                file_path.write_text(json.dumps(st.session_state.file, indent=4))
+                switch_page("samyeee")
 
 main()
