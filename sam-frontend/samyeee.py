@@ -262,11 +262,6 @@ def get_llm_response(location, query, modeloption):
     }
     return inputs, qa_chain
 
-def file_selector(folder_path='.'):
-  filenames = os.listdir(folder_path)
-  selected_filename = st.selectbox('Select a file to edit', filenames, index= None)
-  if selected_filename:
-    return os.path.join(folder_path, selected_filename)
 
 def main():
 
@@ -300,8 +295,6 @@ def main():
       st.session_state.location = get_upload_file_dialog(fu)
     #st.query_params.clear()
   else:
-
-    st.session_state.filename = file_selector()
     st.session_state.location = get_upload_file_dialog(fu)
   
   if st.session_state.filename is not None: 

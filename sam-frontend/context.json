@@ -1,0 +1,14 @@
+{
+    "P2R": {
+        "Context": "As a medical record reviewer nurse in United States, you received the document with the records of patient's medical history from past providers",
+        "is_default": true
+    },
+    "FCM": {
+        "Context": "As a field case nurse in United States, you received a docuemnt with the claim data from Insurance company",
+        "is_default": false
+    },
+    "GB Care": {
+        "Context": "As a case manager nurse in United States, you received a document with the details required to fill a referral form for a patient",
+        "is_default": false
+    }
+}
