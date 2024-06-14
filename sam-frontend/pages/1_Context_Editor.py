@@ -6,13 +6,13 @@ import pandas as pd
 from pathlib import Path
 from streamlit_extras.switch_page_button import switch_page
 from streamlit_extras.stylable_container import stylable_container
-
+st.set_page_config(page_title="SAM-llama3", layout="wide",initial_sidebar_state="collapsed")
 with open("config.json") as user_file:
     file_contents = user_file.read()
     config = json.loads(file_contents)
 
 def click_button():
-    ss.clicked = True
+    ss.clicked_context = True
 
 if 'filename' not in st.session_state:
     ss.filename = config['context_path']
