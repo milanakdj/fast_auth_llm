@@ -238,7 +238,6 @@ with open("config.json") as user_file:
 if 'filename' not in st.session_state:
     st.session_state.filename = config['context_path']
 
-
 def create_agent_chain(llm):
   file = json.loads(Path(st.session_state.filename).read_text())
   context = ""
