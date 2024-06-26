@@ -259,7 +259,7 @@ def get_llm_response(location, query, modeloption):
     llm = None
 
     if modeloption == 'llama3':
-        llm = Ollama(model='llama3')
+        llm = Ollama(model='llama3', temperature=1)
     elif modeloption == 'chatGPT':
         # llm = ChatOpenAI(model_name=config["model"])
         pass

@@ -268,7 +268,7 @@ def get_llm_response(location, query, modeloption):
 
     qa_chain = create_agent_chain(llm)
     matching_docs = vectordb.similarity_search(query)
-    print(matching_docs)
+    print(matching_docs,"\n\n\n")
     inputs = {
         "input_documents": matching_docs,
         "question": query
