@@ -160,10 +160,6 @@ model_id = config["model"]
 CHROMA_PATH = 'chroma'
 DATA_PATH = 'data'
 
-def clear_database():
-   if os.path.exists(CHROMA_PATH):
-      shutil.rmtree(CHROMA_PATH) 
-      
 if 'filename' not in st.session_state:
     st.session_state.filename = config['context_path']
   
@@ -207,7 +203,7 @@ def all_pages_empty(documents):
     return True
     
 
-def load_chunk_persist(doc_path) -> FAISS:
+def load_chunk_persist(doc_path):
     documents = []
 
     # Determine file type
