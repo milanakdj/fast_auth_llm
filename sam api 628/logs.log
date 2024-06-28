@@ -661,4 +661,5 @@ OSError: [WinError 64] The specified network name is no longer available
 2024-06-24 11:03:46,253 INFO: Sending response
 2024-06-24 11:03:51,121 INFO: Sending response
 2024-06-24 11:03:57,070 INFO: Sending response
-2024-06-26 18:01:18,586 INFO: Sending response
+2024-06-28 01:35:58,410 INFO: Anonymized telemetry enabled. See                     https://docs.trychroma.com/telemetry for more information.
+2024-06-28 01:36:20,575 INFO: Sending response

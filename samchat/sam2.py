@@ -19,7 +19,6 @@ from langchain.text_splitter import CharacterTextSplitter
 from pathlib import Path
 import json
 import os
-from config import import_config
 import tempfile
 from langchain.chains.question_answering import load_qa_chain
 from langchain.vectorstores.chroma import Chroma
@@ -32,8 +31,6 @@ logging.basicConfig(filename="logs.log",
                     format="%(asctime)s %(levelname)s: %(message)s", level=logging.INFO)
 
 router = APIRouter()
-
-config = import_config()
 
 CHROMA_PATH = 'chroma'
 
@@ -67,64 +64,49 @@ class PDFQuestionRequestNew(BaseModel):
     cntxt_key: str
 
 
-class PDFQuestionRequestNew(BaseModel):
-    pdf_base64: str
+class PDFQuestionRequest(BaseModel):
     pdf_name: str
     prompt: str
     cntxt_key: str
 
-def get_context_from_key(key=''):
-    if key == '' or key == None:
-        return ''
-
-    context = ''
-    with open(config["context_file"]) as f:
-        objs = json.load(f)
-        # result = [x for x in objs if x["key"] == key]
-        # if len(result) > 0:
-        #     return result[0]['value']
-        # return None       
-        if key in objs:
-            context = objs[key]['Context']
-        else:
-            context_list = [t for t in objs if objs[t]['is_default'] == True]
-            if len(context_list) > 0:
-                context = objs[context_list[0]]['Context']
-    print(context)
-    return context
-    
 @router.post("/ask_from_new_document")
-async def ask_from_document(request: PDFQuestionRequestNew):
+async def ask_from_document(
+    pdf_file: UploadFile,
+    pdf_name:str = Form(...),
+    prompt:str = Form(...),
+    cntxt_key:str = Form(...)):
+    logger.info("New document request")
 
-    doc_as_bytes = str.encode(request.pdf_base64)  # convert string to bytes
-    doc = base64.b64decode(doc_as_bytes)  # decode base64string.
-    act_file_name = "{id}_{name}".format(
-        id=uuid.uuid4(), name=request.pdf_name)
-    # location = os.path.join(config["doc_base_path"], act_file_name)
-    #try:
-    #    with open(location, "wb") as f:
-    #        f.write(doc)
-    #except Exception:
-    #    logger.info("Sending 500: unable to upload file")
-    #    return {"status": 500, "message": "There was an error uploading the file"}
+    # doc_as_bytes = str.encode(request.pdf_base64)  # convert string to bytes
+    # doc = base64.b64decode(doc_as_bytes)  # decode base64string.
+    # act_file_name = "{id}_{name}".format(
+    #     id=uuid.uuid4(), name=request.pdf_name)
+    # # location = os.path.join(config["doc_base_path"], act_file_name)
+    # try:
+    #     with open(location, "wb") as f:
+    #         f.write(doc)
+    # except Exception:
+    #     logger.info("Sending 500: unable to upload file")
+    #     return {"status": 500, "message": "There was an error uploading the file"}
 
-    if request.prompt is None or request.prompt == '':
+    if prompt is None or prompt == '':
         logger.info("Sending 400: Prompt is empty")
         return {"status": 400, "message": "Prompt is empty"}
 
-    sys_cntxt = get_context_from_key(request.cntxt_key)
+    # sys_cntxt = get_context_from_key(request.cntxt_key)
 
     # logger.info("Context: {ct}".format(ct =sys_cntxt))
     try:
+        file_content = await pdf_file.read()
          # Write the file content to a temporary file
         with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp_file:
-            tmp_file.write(doc)
+            tmp_file.write(file_content)
             tmp_file_path = tmp_file.name
             print(tmp_file_path)
 
         try:
             # Use the temporary file path in the function
-            response = get_llm_response_text(tmp_file_path, request.pdf_name, request.prompt, sys_cntxt)
+            response = get_llm_response_text(tmp_file_path, pdf_file.filename,prompt, cntxt_key)
         finally:
             # Make sure to delete the temporary file
             os.remove(tmp_file_path)
@@ -154,7 +136,12 @@ async def ask(request: Request, user:user_dependency,  prompt: Annotated[str, Fo
 
 
 def create_agent_chain(llm,context):
-  sys_msg_pt = SystemMessagePromptTemplate.from_template(context)
+  file = json.loads(Path('context.json').read_text())
+  #use context
+  for f in file:
+      if f == context:
+          context_msg = f['Context']
+  sys_msg_pt = SystemMessagePromptTemplate.from_template(context_msg)
   user_pt = PromptTemplate(template="{context}\n{question}",
                                 input_variables=['context', 'question'])
   user_msg_pt = HumanMessagePromptTemplate(prompt=user_pt)
@@ -162,11 +149,13 @@ def create_agent_chain(llm,context):
   qa_chain = load_qa_chain(llm, chain_type="stuff", verbose= True, prompt = prompt)
   return qa_chain
 	
-def get_llm_response(query, context, modeloption="llama3"):
-    if modeloption == 'llama3':
-        llm = Ollama(model='llama3', temperature=1)
-    elif modeloption == 'chatGPT':
-        llm = ChatOpenAI(model_name=config["model"])
+def get_llm_response(query, context, modeloption):
+    
+    llm = Ollama(model='llama3', temperature=0)
+    # if modeloption == 'llama3':
+    #     llm = Ollama(model='llama3', temperature=1)
+    # elif modeloption == 'chatGPT':
+    #     llm = ChatOpenAI(model_name=config["model"])
     qa_chain = create_agent_chain(llm, context)
 
     embedding_function = OllamaEmbeddings(model="nomic-embed-text")
@@ -230,6 +219,7 @@ def load_chunk_persist(doc_path, file_name):
     else:
         raise ValueError(f"Unsupported file type: {file_extension}")
 
+    import ipdb; ipdb.set_trace()
     # Print documents
     print(documents,"\n\n\n")
 
@@ -258,7 +248,7 @@ def calculate_chunk_ids(chunks):
         last_page_id = current_page_id
 
         chunk.metadata["id"] = chunk_id
-    return chunks
+    return chunk
 
 def delete_all_documents():
     db = Chroma(
@@ -271,7 +261,7 @@ def delete_all_documents():
 def add_to_chroma(chunks):
     db = Chroma(
         persist_directory=CHROMA_PATH, embedding_function=OllamaEmbeddings(model="nomic-embed-text"))
-    chunks_with_ids = calculate_chunk_ids(chunks)
+
     #add or update the documents
 
     existing_items = db.get(include=[])
